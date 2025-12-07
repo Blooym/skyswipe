@@ -18,11 +18,30 @@ import {
 	type OAuthUserAgent
 } from '@atcute/oauth-browser-client';
 
-export function isValidLoginIdentifier(identifier: string): boolean {
+enum AuthenticationType {
+	Account,
+	PDS
+}
+
+function getAuthTypeForIdentifier(identifier: string): AuthenticationType | null {
 	if (identifier.startsWith('@')) {
 		identifier = identifier.substring(1);
 	}
-	return isHandle(identifier) || isDid(identifier);
+	if (isHandle(identifier) || isDid(identifier)) {
+		return AuthenticationType.Account;
+	}
+	try {
+		if (new URL(identifier).protocol === 'https:') {
+			return AuthenticationType.PDS;
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
+export function isValidIdentifier(identifier: string) {
+	return getAuthTypeForIdentifier(identifier) !== null;
 }
 
 export function initOAuthClient() {
@@ -77,7 +96,7 @@ export async function oAuthLogin(
 	statusCallback: (text: string) => void = () => {}
 ) {
 	try {
-		if (!identifier || !isValidLoginIdentifier(identifier)) {
+		if (!identifier || !isValidIdentifier(identifier)) {
 			throw new Error('invalid login identifier');
 		}
 		if (identifier.startsWith('@')) {
@@ -85,7 +104,10 @@ export async function oAuthLogin(
 		}
 		statusCallback('Contacting PDS...');
 		const authUrl = await createAuthorizationUrl({
-			target: { type: 'account', identifier: identifier as ActorIdentifier },
+			target:
+				getAuthTypeForIdentifier(identifier) === AuthenticationType.Account
+					? { type: 'account', identifier: identifier as ActorIdentifier }
+					: { type: 'pds', serviceUrl: identifier },
 			scope: import.meta.env.VITE_OAUTH_SCOPE
 		});
 		statusCallback('Redirecting...');

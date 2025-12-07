@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { isValidLoginIdentifier, oAuthLogin } from '$lib/atprotoAuth';
+	import { isValidIdentifier, oAuthLogin } from '$lib/atprotoAuth';
 
-	let loginHandleInput = $state<string>('');
+	let loginIdentifierInput = $state<string>('');
 	let loginStatusMessage = $state<string | undefined>();
 
 	function performLogin(e: Event) {
 		e.preventDefault();
-		if (loginHandleInput && isValidLoginIdentifier(loginHandleInput)) {
-			oAuthLogin(loginHandleInput, (msg: string) => (loginStatusMessage = msg));
+		if (loginIdentifierInput && isValidIdentifier(loginIdentifierInput) !== null) {
+			oAuthLogin(loginIdentifierInput, (msg: string) => (loginStatusMessage = msg));
 		}
 	}
 </script>
@@ -20,17 +20,17 @@
 
 	<div class="form-content">
 		<div class="input-group">
-			<label for="handle">Handle</label>
+			<label for="identifier">Handle</label>
 			<input
 				type="text"
 				required
 				autocomplete="off"
 				placeholder="bsky.example.com"
-				id="handle"
-				bind:value={loginHandleInput}
+				id="identifier"
+				bind:value={loginIdentifierInput}
 			/>
 		</div>
-		<button id="loginButton" type="submit" disabled={!isValidLoginIdentifier(loginHandleInput)}
+		<button id="loginButton" type="submit" disabled={!isValidIdentifier(loginIdentifierInput)}
 			>Continue</button
 		>
 		{#if loginStatusMessage}
