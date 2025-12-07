@@ -1,0 +1,13 @@
+{
+	"client_id": "https://skyswipe.dollware.net/client-metadata.json",
+	"client_name": "Skyswipe",
+	"client_uri": "https://skyswipe.dollware.net",
+	"logo_uri": "https://skyswipe.dollware.net/favicon.ico",
+	"redirect_uris": ["https://skyswipe.dollware.net"],
+	"scope": "atproto repo?collection=app.bsky.feed.post&action=delete rpc:app.bsky.actor.getProfile?aud=* rpc:app.bsky.feed.getAuthorFeed?aud=*",
+	"grant_types": ["authorization_code", "refresh_token"],
+	"response_types": ["code"],
+	"token_endpoint_auth_method": "none",
+	"application_type": "web",
+	"dpop_bound_access_tokens": true
+}
