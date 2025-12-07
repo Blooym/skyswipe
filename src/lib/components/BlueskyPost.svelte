@@ -94,6 +94,7 @@
 		.content {
 			p {
 				margin: 0.2rem 0;
+				word-wrap: break-word;
 			}
 			.content-image {
 				max-height: 500px;
