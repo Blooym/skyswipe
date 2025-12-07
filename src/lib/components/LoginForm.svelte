@@ -24,7 +24,7 @@
 			<input
 				type="text"
 				required
-				autocomplete="username"
+				autocomplete="off"
 				placeholder="bsky.example.com"
 				id="handle"
 				bind:value={loginHandleInput}
