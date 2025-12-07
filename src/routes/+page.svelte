@@ -220,6 +220,17 @@
 				border-radius: 4px;
 				border: unset;
 			}
+
+			@media (max-width: 700px) {
+				flex-direction: column;
+				gap: 1rem;
+				button {
+					width: 100%;
+					max-width: 350px;
+					height: 3rem;
+					order: 1;
+				}
+			}
 		}
 
 		#keepButton {

@@ -108,11 +108,13 @@
 		.details {
 			color: var(--subtext-colour);
 			border-top: 1px dashed var(--subtext-colour);
-			padding-top: 0.2rem;
+			padding-top: 0.3rem;
 
 			.metainfo {
 				display: flex;
 				justify-content: space-between;
+				flex-wrap: wrap;
+				row-gap: 0.2rem;
 			}
 		}
 	}
