@@ -65,12 +65,12 @@
 		.form-content {
 			display: flex;
 			flex-direction: column;
-			gap: 1rem;
+			gap: 0.8rem;
 
 			.input-group {
 				display: flex;
 				flex-direction: column;
-				gap: 0.3rem;
+				gap: 0.4rem;
 
 				label {
 					font-weight: 600;
@@ -78,8 +78,10 @@
 				}
 
 				input {
+					background-color: var(--overlay-colour);
+					color: var(--text-colour);
 					width: 100%;
-					padding: 0.7rem 0.6rem;
+					padding: 0.7rem;
 					border-radius: 4px;
 					border: none;
 					font-size: 1rem;
