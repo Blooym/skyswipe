@@ -1,22 +1,40 @@
+import { getAtprotoHandle } from '@atcute/identity';
 import {
 	CompositeDidDocumentResolver,
 	CompositeHandleResolver,
 	DohJsonHandleResolver,
+	LocalActorResolver,
 	PlcDidDocumentResolver,
 	WebDidDocumentResolver,
 	WellKnownHandleResolver
 } from '@atcute/identity-resolver';
-import type { ActorIdentifier, Did } from '@atcute/lexicons';
+import type { ActorIdentifier, Did, Handle } from '@atcute/lexicons';
 import { isDid, isHandle } from '@atcute/lexicons/syntax';
 import {
 	configureOAuth,
 	createAuthorizationUrl,
-	defaultIdentityResolver,
 	deleteStoredSession,
 	finalizeAuthorization,
 	getSession,
-	type OAuthUserAgent
+	type OAuthUserAgent,
+	type Session
 } from '@atcute/oauth-browser-client';
+
+const identityResolver = new LocalActorResolver({
+	handleResolver: new CompositeHandleResolver({
+		strategy: 'race',
+		methods: {
+			dns: new DohJsonHandleResolver({ dohUrl: 'https://cloudflare-dns.com/dns-query?' }),
+			http: new WellKnownHandleResolver()
+		}
+	}),
+	didDocumentResolver: new CompositeDidDocumentResolver({
+		methods: {
+			plc: new PlcDidDocumentResolver(),
+			web: new WebDidDocumentResolver()
+		}
+	})
+});
 
 enum AuthenticationType {
 	Account,
@@ -40,27 +58,21 @@ function getAuthTypeForIdentifier(identifier: string): AuthenticationType | null
 	}
 }
 
-export function isValidIdentifier(identifier: string) {
+export async function handleForDid(identifier: Did): Promise<Handle> {
+	const FALLBACK_HANDLE: Handle = 'handle.invalid';
+	return (
+		getAtprotoHandle(await identityResolver.didDocumentResolver.resolve(identifier)) ||
+		FALLBACK_HANDLE
+	);
+}
+
+export function isValidIdentifier(identifier: string): boolean {
 	return getAuthTypeForIdentifier(identifier) !== null;
 }
 
-export function initOAuthClient() {
+export function initOAuthClient(): void {
 	configureOAuth({
-		identityResolver: defaultIdentityResolver({
-			handleResolver: new CompositeHandleResolver({
-				strategy: 'race',
-				methods: {
-					dns: new DohJsonHandleResolver({ dohUrl: 'https://cloudflare-dns.com/dns-query?' }),
-					http: new WellKnownHandleResolver()
-				}
-			}),
-			didDocumentResolver: new CompositeDidDocumentResolver({
-				methods: {
-					plc: new PlcDidDocumentResolver(),
-					web: new WebDidDocumentResolver()
-				}
-			})
-		}),
+		identityResolver,
 		metadata: {
 			client_id: import.meta.env.VITE_OAUTH_CLIENT_ID,
 			redirect_uri: import.meta.env.VITE_OAUTH_REDIRECT_URI
@@ -68,7 +80,7 @@ export function initOAuthClient() {
 	});
 }
 
-export async function initOrRestoreOAuthSession() {
+export async function initOrRestoreOAuthSession(): Promise<Session | undefined> {
 	const LAST_SIGNED_IN_LOCALKEY = 'lastSignedIn';
 	const params = new URLSearchParams(location.hash.slice(1));
 	if (params.has('state') && (params.has('code') || params.has('error'))) {
@@ -94,7 +106,7 @@ export async function initOrRestoreOAuthSession() {
 export async function oAuthLogin(
 	identifier: string,
 	statusCallback: (text: string) => void = () => {}
-) {
+): Promise<void> {
 	try {
 		if (!identifier || !isValidIdentifier(identifier)) {
 			throw new Error('invalid login identifier');
@@ -122,7 +134,7 @@ export async function oAuthLogin(
 export async function oAuthSignout(
 	oauthAgent: OAuthUserAgent,
 	statusCallback: (text: string) => void = () => {}
-) {
+): Promise<void> {
 	if (!oauthAgent) {
 		throw new Error('unable to signout as oauth agent or xrpc client are not initialised');
 	}

@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { initOAuthClient, initOrRestoreOAuthSession, oAuthSignout } from '$lib/atprotoAuth';
+	import {
+		handleForDid,
+		initOAuthClient,
+		initOrRestoreOAuthSession,
+		oAuthSignout
+	} from '$lib/atproto';
 	import { getBlueskyPosts } from '$lib/bluesky';
 	import ApplicationError from '$lib/components/ApplicationError.svelte';
 	import BlueskyPost from '$lib/components/BlueskyPost.svelte';
@@ -8,26 +13,27 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import LoginForm from '$lib/components/LoginForm.svelte';
 	import { randomItem } from '$lib/util';
-	import type {} from '@atcute/atproto';
-	import { AppBskyActorGetProfile, AppBskyFeedDefs } from '@atcute/bluesky';
-	import { Client, ok } from '@atcute/client';
+	import { AppBskyFeedDefs } from '@atcute/bluesky';
+	import type { FeedViewPost } from '@atcute/bluesky/types/app/feed/defs';
+	import { Client } from '@atcute/client';
+	import type { Handle } from '@atcute/lexicons';
 	import { OAuthUserAgent } from '@atcute/oauth-browser-client';
 	import { onMount } from 'svelte';
-
-	let oauthAgent = $state<OAuthUserAgent | undefined>();
-	let xrpcClient = $state<Client | undefined>();
 
 	let appLoading = $state<boolean>(true);
 	let appLoadError = $state<string | undefined>();
 
-	let actorProfile = $state<AppBskyActorGetProfile.$output | undefined>();
-	let actorFeed = $state<AppBskyFeedDefs.FeedViewPost[]>([]);
+	let oauthAgent = $state<OAuthUserAgent | undefined>();
+	let xrpcClient = $state<Client | undefined>();
+
+	let actorHandle = $state<Handle | undefined>();
+	let actorFeed = $state<FeedViewPost[]>([]);
 
 	let feedCurrentCursor = $state<string | undefined>();
 	let feedHasMorePosts = $state<boolean>(true);
 	let feedCurrentPost = $state<AppBskyFeedDefs.FeedViewPost | undefined>();
-	let processingPostUpdate = $state<boolean>(false);
 	let feedIsLoadingPosts = $state<boolean>(false);
+	let feedIsProcessingUpdate = $state<boolean>(false);
 
 	onMount(async () => {
 		try {
@@ -38,14 +44,7 @@
 			if (session) {
 				oauthAgent = new OAuthUserAgent(session);
 				xrpcClient = new Client({ handler: oauthAgent });
-
-				actorProfile = ok(
-					await xrpcClient.get('app.bsky.actor.getProfile', {
-						params: {
-							actor: oauthAgent.sub
-						}
-					})
-				);
+				actorHandle = await handleForDid(oauthAgent.sub);
 				await loadPostBatch(oauthAgent, xrpcClient);
 				feedCurrentPost = randomItem(actorFeed);
 			}
@@ -58,7 +57,7 @@
 	});
 
 	async function loadPostBatch(oauthAgent: OAuthUserAgent, xrpcClient: Client) {
-		const DESIRED_POST_COUNT = 300;
+		const DESIRED_POST_COUNT = 1;
 
 		if (!feedHasMorePosts || feedIsLoadingPosts) return;
 
@@ -106,10 +105,10 @@
 
 	async function keepPostAction(oauthAgent: OAuthUserAgent, xrpcClient: Client, post: any) {
 		try {
-			processingPostUpdate = true;
+			feedIsProcessingUpdate = true;
 			await updateFeedAfterAction(oauthAgent, xrpcClient, post);
 		} finally {
-			processingPostUpdate = false;
+			feedIsProcessingUpdate = false;
 		}
 	}
 
@@ -119,7 +118,7 @@
 		}
 
 		try {
-			processingPostUpdate = true;
+			feedIsProcessingUpdate = true;
 			await xrpcClient.post('com.atproto.repo.deleteRecord', {
 				input: {
 					collection: 'app.bsky.feed.post',
@@ -131,36 +130,38 @@
 		} catch (err) {
 			console.error(err);
 		} finally {
-			processingPostUpdate = false;
+			feedIsProcessingUpdate = false;
 		}
 	}
 </script>
 
-{#if appLoadError}
-	<main class="page-content">
-		<ApplicationError errorMessage={appLoadError} />
-	</main>
-{:else if appLoading}
+{#if appLoading}
 	<main class="page-content">
 		<LoadingSpinner />
 	</main>
-{:else if actorProfile && oauthAgent && xrpcClient}
+{:else if appLoadError}
+	<main class="page-content">
+		<ApplicationError errorMessage={appLoadError} />
+	</main>
+
+	<!-- Authenticated -->
+{:else if oauthAgent && xrpcClient}
 	<HeaderBar />
 	<main class="page-content">
-		{#if feedIsLoadingPosts && actorFeed.length === 0}
+		{#if feedIsLoadingPosts}
 			<LoadingSpinner />
-			<p>Loading posts...</p>
+			<p>Loading more posts</p>
 		{:else if feedCurrentPost}
 			<div class="posts-container">
 				<button
 					id="deleteButton"
-					disabled={processingPostUpdate || feedIsLoadingPosts}
+					disabled={feedIsProcessingUpdate || feedIsLoadingPosts}
 					onclick={() => deleteAction(oauthAgent!, xrpcClient!, feedCurrentPost)}>Delete</button
 				>
 				<BlueskyPost post={feedCurrentPost} />
 				<button
 					id="keepButton"
-					disabled={processingPostUpdate || feedIsLoadingPosts}
+					disabled={feedIsProcessingUpdate || feedIsLoadingPosts}
 					onclick={() => keepPostAction(oauthAgent!, xrpcClient!, feedCurrentPost)}>Keep</button
 				>
 			</div>
@@ -168,9 +169,6 @@
 				{actorFeed.length}
 				{actorFeed.length === 1 ? 'post' : 'posts'} remaining in current batch.
 			</p>
-		{:else if feedIsLoadingPosts}
-			<LoadingSpinner />
-			<p>Loading more posts...</p>
 		{:else if !feedHasMorePosts && actorFeed.length === 0}
 			<p>
 				You have no more posts to review - either you've seen them all in this session, or you have
@@ -183,7 +181,9 @@
 			</p>
 		{/if}
 	</main>
-	<FooterBar signoutAction={() => oAuthSignout(oauthAgent!)} handle={actorProfile.handle} />
+	<FooterBar signoutAction={() => oAuthSignout(oauthAgent!)} handle={actorHandle ?? 'unknown'} />
+
+	<!-- Unauthenticated -->
 {:else}
 	<main class="page-content">
 		<div class="intro">

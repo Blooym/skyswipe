@@ -1,8 +1,13 @@
 import type {} from '@atcute/atproto';
+import type { FeedViewPost } from '@atcute/bluesky/types/app/feed/defs';
 import { ok, type Client } from '@atcute/client';
 import type { ActorIdentifier } from '@atcute/lexicons';
 
-export async function getBlueskyPosts(xrpcClient: Client, actor: ActorIdentifier, cursor?: string) {
+export async function getBlueskyPosts(
+	xrpcClient: Client,
+	actor: ActorIdentifier,
+	cursor?: string
+): Promise<{ feed: FeedViewPost[]; cursor: string | undefined; noMorePosts: boolean }> {
 	const posts = await ok(
 		xrpcClient.get('app.bsky.feed.getAuthorFeed', {
 			params: {

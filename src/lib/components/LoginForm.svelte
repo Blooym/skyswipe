@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isValidIdentifier, oAuthLogin } from '$lib/atprotoAuth';
+	import { isValidIdentifier, oAuthLogin } from '$lib/atproto';
 
 	let loginIdentifierInput = $state<string>('');
 	let loginStatusMessage = $state<string | undefined>();

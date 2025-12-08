@@ -11,9 +11,8 @@
 		{errorMessage}
 	</code>
 	<p>
-		View the browser console for more information. Consider reporting this issue on <a
-			href="https://github.com/Blooym/skyswipe">GitHub</a
-		>.
+		View the browser console for more information. If this occurs after a page refresh, consider
+		reporting it on <a href="https://github.com/Blooym/skyswipe">GitHub</a>.
 	</p>
 </div>
 
