@@ -41,6 +41,9 @@ export default defineConfig({
 			$lib: path.resolve(__dirname, './src/lib')
 		}
 	},
+	build: {
+		sourcemap: true
+	},
 	server: {
 		host: SERVER_HOST,
 		port: SERVER_PORT
