@@ -47,7 +47,7 @@
 
 <style>
 	.login-form {
-		background: var(--surface-colour);
+		background: var(--mantle-colour);
 		border-radius: 8px;
 		padding: 2rem;
 		width: 100%;
@@ -82,8 +82,8 @@
 				}
 
 				input {
-					background-color: var(--overlay-colour);
-					color: var(--text-colour);
+					background-color: var(--crust-colour);
+					color: var(--subtext-colour);
 					width: 100%;
 					padding: 0.7rem;
 					border-radius: 4px;

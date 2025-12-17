@@ -1,13 +1,29 @@
 :root {
-	--crust-colour: rgb(17, 17, 27);
-	--base-colour: rgb(24, 24, 37);
-	--text-colour: rgb(205, 214, 244);
-	--subtext-colour: rgb(186, 194, 222);
-	--surface-colour: rgb(49, 50, 68);
-	--overlay-colour: rgb(69, 71, 90);
-	--accent-colour: rgb(203, 166, 247);
-	--positive-colour: rgb(166, 227, 161);
-	--negative-colour: rgb(243, 139, 168);
+	--crust-colour: rgb(220, 224, 232);
+	--mantle-colour: rgb(230, 233, 239);
+	--base-colour: rgb(239, 241, 245);
+	--text-colour: rgb(76, 79, 105);
+	--subtext-colour: rgb(92, 95, 119);
+	--surface-colour: rgb(204, 208, 218);
+	--overlay-colour: rgb(156, 160, 176);
+	--accent-colour: rgb(136, 57, 239);
+	--positive-colour: rgb(64, 160, 43);
+	--negative-colour: rgb(210, 15, 57);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--crust-colour: rgb(17, 17, 27);
+		--mantle-colour: rgb(24, 24, 37);
+		--base-colour: rgb(30, 30, 46);
+		--text-colour: rgb(205, 214, 244);
+		--subtext-colour: rgb(186, 194, 222);
+		--surface-colour: rgb(49, 50, 68);
+		--overlay-colour: rgb(69, 71, 90);
+		--accent-colour: rgb(203, 166, 247);
+		--positive-colour: rgb(166, 227, 161);
+		--negative-colour: rgb(243, 139, 168);
+	}
 }
 
 * {
