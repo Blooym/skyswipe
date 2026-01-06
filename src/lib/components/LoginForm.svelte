@@ -33,10 +33,7 @@
 		<button id="loginButton" type="submit" disabled={!isValidIdentifier(loginIdentifierInput)}
 			>Continue</button
 		>
-		<small
-			>Login information is only stored on your device and allows restricted access to view and
-			delete Bluesky posts.</small
-		>
+		<small>Your login information is only stored on your device.</small>
 		{#if loginStatusMessage}
 			<div class="progress-message">
 				<p>{loginStatusMessage}</p>

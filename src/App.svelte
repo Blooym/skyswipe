@@ -43,7 +43,13 @@
 			});
 			if (session) {
 				oauthAgent = new OAuthUserAgent(session);
-				xrpcClient = new Client({ handler: oauthAgent });
+				xrpcClient = new Client({
+					handler: oauthAgent,
+					proxy: {
+						did: 'did:web:api.bsky.app',
+						serviceId: '#bsky_appview'
+					}
+				});
 				actorHandle = await handleForDid(oauthAgent.sub);
 				await loadPostBatch(oauthAgent, xrpcClient);
 				feedCurrentPost = randomItem(actorFeed);
